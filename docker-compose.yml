@@ -1,0 +1,103 @@
+services:
+  postgres-auth:
+    image: postgres:16
+    container_name: auth_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: auth_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_auth:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-cards:
+    image: postgres:16
+    container_name: cards_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: cards_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata_cards:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d cards_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ./backend/auth_service
+      dockerfile: Dockerfile
+    container_name: auth_app
+    environment:
+      DB_HOST: postgres-auth
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: admin
+      DB_PASSWORD: admin
+      PYTHONPATH: /app
+    networks:
+      - backend-network
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+
+  cards-service:
+    build:
+      context: ./backend/cards_service
+      dockerfile: Dockerfile
+    container_name: cards_app
+    environment:
+      DB_HOST: postgres-cards
+      DB_PORT: 5432
+      DB_NAME: cards_db
+      DB_USER: admin
+      DB_PASSWORD: admin
+      PYTHONPATH: /app
+    networks:
+      - backend-network
+    depends_on:
+      postgres-cards:
+        condition: service_healthy
+    expose:
+      - "8000"
+    ports:
+      - "8001:8001"
+
+  web:
+    build:
+      context: ./frontend/web
+      dockerfile: Dockerfile
+    container_name: web_app
+    ports:
+      - "3000:5173"
+    networks:
+      - backend-network
+    depends_on:
+      - auth-service
+      - cards-service
+
+networks:
+  backend-network:
+    driver: bridge
+
+volumes:
+  pgdata_auth:
+  pgdata_cards:
