@@ -6,6 +6,7 @@ from schemas.skills import SkillsSchema
 
 
 class CardCreateSchema(BaseModel):
+    name: str
     first_name: str
     last_name: str
     profession: str
@@ -19,6 +20,7 @@ class CardCreateSchema(BaseModel):
 
 
 class CardUpdateSchema(BaseModel):
+    name: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     profession: str | None = None
@@ -34,6 +36,7 @@ class CardUpdateSchema(BaseModel):
 class CardReadSchema(BaseModel):
     id: int
     user_id: int
+    name: str
     first_name: str
     last_name: str
     profession: str

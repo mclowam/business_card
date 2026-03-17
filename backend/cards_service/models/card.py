@@ -8,6 +8,7 @@ class Card(Base):
     __tablename__ = 'cards'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
     user_id: Mapped[int] = mapped_column(Integer)
     first_name: Mapped[str] = mapped_column(String(250))
     last_name: Mapped[str] = mapped_column(String(250))

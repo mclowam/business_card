@@ -43,6 +43,20 @@ class CardRepository:
         result = await self._session.execute(query)
         return result.scalar_one_or_none()
 
+    async def card_by_name(self, name: str) -> Card | None:
+        query = (
+            select(Card)
+            .options(
+                selectinload(Card.skills),
+                selectinload(Card.experiences),
+                selectinload(Card.projects),
+                selectinload(Card.user_occupations),
+            )
+            .where(Card.name == name)
+        )
+        result = await self._session.execute(query)
+        return result.scalar_one_or_none()
+
     async def save(self, card: Card) -> Card:
         await self._session.commit()
         await self._session.refresh(card)

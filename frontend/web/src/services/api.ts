@@ -1,11 +1,9 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api'
-
 class ApiClient {
   private baseUrl: string
   private token: string | null = null
 
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl
+    this.baseUrl = baseUrl.replace(/\/+$/, '')
     this.token = localStorage.getItem('token')
   }
 
@@ -28,7 +26,7 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const response = await fetch(`${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`, {
       ...options,
       headers,
     })
@@ -53,9 +51,22 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'PUT', body: JSON.stringify(data) })
   }
 
+  patch<T>(endpoint: string, data: unknown) {
+    return this.request<T>(endpoint, { method: 'PATCH', body: JSON.stringify(data) })
+  }
+
   delete<T>(endpoint: string) {
     return this.request<T>(endpoint, { method: 'DELETE' })
   }
 }
 
-export const api = new ApiClient(API_BASE)
+const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:8000'
+const CARDS_API_BASE = import.meta.env.VITE_CARDS_API_URL ?? 'http://localhost:8001'
+
+export const authApi = new ApiClient(AUTH_API_BASE)
+export const cardsApi = new ApiClient(CARDS_API_BASE)
+
+export function setApiToken(token: string | null) {
+  authApi.setToken(token)
+  cardsApi.setToken(token)
+}

@@ -36,19 +36,59 @@ async def create_card(
     return await service.create_card(user_id=user.user_id, data=data)
 
 
-@card_router.get("/{card_id}", response_model=CardReadSchema)
-async def get_card(card_id: int, session: SessionDep):
+# Static paths MUST come before /{card_id} so FastAPI doesn't try to cast "me" / "site" to int
+@card_router.get("/me", response_model=CardReadSchema)
+async def get_my_card(session: SessionDep, user: UserPayload = Depends(get_current_user)):
     service = get_service(session)
-    card = await service.get_card(card_id)
+    card = await service.get_card_by_user(user.user_id)
     if card is None:
         raise HTTPException(status_code=404, detail="Card not found")
     return card
 
 
-@card_router.get("/user/{user_id}", response_model=CardReadSchema)
+@card_router.patch("/me", response_model=CardReadSchema)
+async def update_my_card(
+    data: CardUpdateSchema,
+    session: SessionDep,
+    user: UserPayload = Depends(get_current_user),
+):
+    service = get_service(session)
+    card = await service.update_my_card(user_id=user.user_id, data=data)
+    if card is None:
+        raise HTTPException(status_code=404, detail="Card not found")
+    return card
+
+
+@card_router.delete("/me", status_code=204)
+async def delete_my_card(session: SessionDep, user: UserPayload = Depends(get_current_user)):
+    service = get_service(session)
+    deleted = await service.delete_my_card(user_id=user.user_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Card not found")
+
+
+@card_router.get("/site/{name}", response_model=CardReadSchema)
+async def get_card_by_site_name(name: str, session: SessionDep):
+    service = get_service(session)
+    card = await service.get_card_by_name(name)
+    if card is None:
+        raise HTTPException(status_code=404, detail="Card not found")
+    return card
+
+
+@card_router.get("/user/me", response_model=CardReadSchema)
 async def get_card_by_user(session: SessionDep, user: UserPayload = Depends(get_current_user)):
     service = get_service(session)
     card = await service.get_card_by_user(user.user_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail="Card not found")
+    return card
+
+
+@card_router.get("/{card_id}", response_model=CardReadSchema)
+async def get_card(card_id: int, session: SessionDep):
+    service = get_service(session)
+    card = await service.get_card(card_id)
     if card is None:
         raise HTTPException(status_code=404, detail="Card not found")
     return card
@@ -65,19 +105,6 @@ async def update_card(
     card = await service.update_card(card_id=card_id, user_id=user.user_id, data=data)
     if card is None:
         raise HTTPException(status_code=404, detail="Card not found or access denied")
-    return card
-
-
-@card_router.patch("/me", response_model=CardReadSchema)
-async def update_my_card(
-    data: CardUpdateSchema,
-    session: SessionDep,
-    user: UserPayload = Depends(get_current_user),
-):
-    service = get_service(session)
-    card = await service.update_my_card(user_id=user.user_id, data=data)
-    if card is None:
-        raise HTTPException(status_code=404, detail="Card not found")
     return card
 
 

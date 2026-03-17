@@ -1,14 +1,15 @@
-export interface User {
-  id: string
-  username: string
+export type UserRole = 'admin' | 'client'
+
+export interface UserPayload {
+  user_id: number
   email: string
-  avatarUrl?: string
-  createdAt: string
+  role: UserRole
 }
 
-export interface AuthResponse {
-  user: User
-  token: string
+export interface TokenPair {
+  access_token: string
+  refresh_token: string
+  token_type: 'bearer' | string
 }
 
 export interface LoginPayload {
@@ -17,7 +18,6 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  username: string
   email: string
   password: string
 }

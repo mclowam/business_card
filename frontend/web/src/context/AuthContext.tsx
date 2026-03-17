@@ -1,20 +1,20 @@
 import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react'
-import type { User } from '@/types'
+import type { UserPayload } from '@/types'
 import { authService } from '@/services/auth'
 
 interface AuthContextValue {
-  user: User | null
+  user: UserPayload | null
   isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (username: string, email: string, password: string) => Promise<void>
+  register: (email: string, password: string) => Promise<void>
   logout: () => void
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserPayload | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -34,13 +34,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
-    const { user } = await authService.login({ email, password })
-    setUser(user)
+    await authService.login({ email, password })
+    const me = await authService.me()
+    setUser(me)
   }, [])
 
-  const register = useCallback(async (username: string, email: string, password: string) => {
-    const { user } = await authService.register({ username, email, password })
-    setUser(user)
+  const register = useCallback(async (email: string, password: string) => {
+    await authService.register({ email, password })
+    const me = await authService.me()
+    setUser(me)
   }, [])
 
   const logout = useCallback(() => {

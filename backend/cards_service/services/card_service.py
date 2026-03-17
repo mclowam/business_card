@@ -40,6 +40,12 @@ class CardService:
             return None
         return CardReadSchema.model_validate(card)
 
+    async def get_card_by_name(self, name: str) -> CardReadSchema | None:
+        card = await self._card_repo.card_by_name(name)
+        if card is None:
+            return None
+        return CardReadSchema.model_validate(card)
+
     async def create_card(self, user_id: int, data: CardCreateSchema) -> CardReadSchema:
         skills = data.skills or []
         experiences = data.experiences or []
@@ -47,6 +53,7 @@ class CardService:
         projects = data.projects or []
 
         new_card = Card(
+            name=data.name,
             user_id=user_id,
             first_name=data.first_name,
             last_name=data.last_name,
@@ -98,6 +105,8 @@ class CardService:
         return CardReadSchema.model_validate(loaded)
 
     def _apply_update(self, card: Card, data: CardUpdateSchema) -> None:
+        if data.name is not None:
+            card.name = data.name
         if data.first_name is not None:
             card.first_name = data.first_name
         if data.last_name is not None:
@@ -131,6 +140,13 @@ class CardService:
 
     async def delete_card(self, card_id: int) -> bool:
         card = await self._card_repo.detail(card_id)
+        if card is None:
+            return False
+        await self._card_repo.delete(card)
+        return True
+
+    async def delete_my_card(self, user_id: int) -> bool:
+        card = await self._card_repo.card_by_user(user_id)
         if card is None:
             return False
         await self._card_repo.delete(card)
