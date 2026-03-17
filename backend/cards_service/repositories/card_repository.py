@@ -43,6 +43,11 @@ class CardRepository:
         result = await self._session.execute(query)
         return result.scalar_one_or_none()
 
+    async def save(self, card: Card) -> Card:
+        await self._session.commit()
+        await self._session.refresh(card)
+        return card
+
     async def delete(self, card: Card) -> None:
         await self._session.delete(card)
         await self._session.commit()

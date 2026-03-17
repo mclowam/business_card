@@ -9,6 +9,8 @@ from schemas.user import UserCreateSchema, TokenSchema, RefreshTokenSchema
 from schemas.roles import UserPayload
 from services import UserRepository, AuthService, JWTTokenService, BcryptPasswordHasher
 
+from schemas.user import UserLoginSchema
+
 auth_router = APIRouter(prefix="/auth")
 
 def get_auth_service(session: SessionDep) -> AuthService:
@@ -28,10 +30,10 @@ async def register(user_data: UserCreateSchema, session: SessionDep):
 @auth_router.post("/login", response_model=TokenSchema)
 async def login(
     session: SessionDep,
-    data: OAuth2PasswordRequestForm = Depends()
+    data: UserLoginSchema,
 ):
     service = get_auth_service(session)
-    result = await service.login(data.username, data.password)
+    result = await service.login(data.email, data.password)
     return TokenSchema(**result)
 
 @auth_router.post("/refresh", response_model=TokenSchema)

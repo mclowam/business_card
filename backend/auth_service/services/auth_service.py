@@ -37,7 +37,7 @@ class AuthService:
             "id": new_user.id,
             "email": new_user.email,
             "role": new_user.role,
-            "status": "successfully registered as volunteer",
+            "status": "successfully registered",
         }
 
     async def login(self, email: str, password: str) -> dict:
