@@ -8,9 +8,11 @@ from app.db.session import get_session
 from app.schemas import UserPayload
 from tests.helpers import make_result_all
 
+
 @pytest.fixture
 def user():
     return UserPayload(user_id=1, role="client", email="test@gmail.com")
+
 
 @pytest.fixture
 def mock_session():
@@ -20,12 +22,21 @@ def mock_session():
     session.commit = AsyncMock(return_value=None)
     session.flush = AsyncMock(return_value=None)
     session.close = AsyncMock(return_value=None)
+
+    async def mock_refresh(obj):
+        obj.id = 1
+        return None
+
+    session.refresh = AsyncMock(side_effect=mock_refresh)
+
     return session
+
 
 @pytest.fixture(autouse=True)
 def override_dependencies(user, mock_session):
     async def _mock_get_user():
         return user
+
     async def _mock_get_session():
         yield mock_session
 
@@ -34,10 +45,11 @@ def override_dependencies(user, mock_session):
     yield
     app.dependency_overrides.clear()
 
+
 @pytest.fixture
 async def client():
     async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
+            transport=ASGITransport(app=app),
+            base_url="http://test"
     ) as ac:
         yield ac
