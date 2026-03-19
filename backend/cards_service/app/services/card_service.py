@@ -103,7 +103,7 @@ class CardService:
             return None
 
         key = f"user_{user_id}_avatar"
-        await self._images.upload(file_obj, key)
+        await self._images.upload(file_obj, key, content_type=content_type)
         card.avatar_key = key
 
         await self._card_repo.save(card)

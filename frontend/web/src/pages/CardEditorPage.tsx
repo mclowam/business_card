@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Plus, Save, X } from 'lucide-react'
+import { ImagePlus, Plus, Save, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import type { CardCreate, CardUpdate, Experience, Project, Skill, UserOccupation } from '@/types'
@@ -25,6 +25,10 @@ export function CardEditorPage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [avatarError, setAvatarError] = useState('')
+  const [isAvatarLoading, setIsAvatarLoading] = useState(false)
+  const [avatarPreview, setAvatarPreview] = useState('')
+  const [hasAvatar, setHasAvatar] = useState(false)
 
   useEffect(() => {
     if (!isEdit) return
@@ -43,6 +47,10 @@ export function CardEditorPage() {
         setExperiences(card.experiences)
         setProjects(card.projects)
         setUserOccupations(card.user_occupations)
+        setHasAvatar(Boolean(card.avatar_url))
+        if (card.avatar_url) {
+          setAvatarPreview(`${cardsService.getAvatarUrl(card.id)}?v=${Date.now()}`)
+        }
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Не удалось загрузить карточку'))
       .finally(() => setIsLoading(false))
@@ -97,6 +105,40 @@ export function CardEditorPage() {
     }
   }
 
+  const handleAvatarUpload = async (file: File | null) => {
+    if (!file) return
+    if (!isEdit) {
+      setAvatarError('Сначала создайте карточку, затем добавьте аватар.')
+      return
+    }
+
+    setAvatarError('')
+    setIsAvatarLoading(true)
+    try {
+      const updatedCard = await cardsService.uploadMyAvatar(file)
+      setHasAvatar(Boolean(updatedCard.avatar_url))
+      setAvatarPreview(`${cardsService.getAvatarUrl(updatedCard.id)}?v=${Date.now()}`)
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Не удалось загрузить аватар')
+    } finally {
+      setIsAvatarLoading(false)
+    }
+  }
+
+  const handleAvatarDelete = async () => {
+    setAvatarError('')
+    setIsAvatarLoading(true)
+    try {
+      await cardsService.deleteMyAvatar()
+      setHasAvatar(false)
+      setAvatarPreview('')
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Не удалось удалить аватар')
+    } finally {
+      setIsAvatarLoading(false)
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="flex items-center justify-between mb-8">
@@ -130,6 +172,53 @@ export function CardEditorPage() {
           <Input label="Профессия" value={profession} onChange={(e) => setProfession(e.target.value)} required />
           <Input label="Короткий текст" value={text} onChange={(e) => setText(e.target.value)} required />
           <Input label="О себе" value={aboutUser} onChange={(e) => setAboutUser(e.target.value)} required />
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-surface-200 pb-2">
+            <h2 className="text-lg font-semibold text-surface-800">Аватар</h2>
+            {hasAvatar && (
+              <Button type="button" variant="ghost" size="sm" className="text-red-400" onClick={handleAvatarDelete} isLoading={isAvatarLoading}>
+                <Trash2 className="h-4 w-4" />
+                Удалить
+              </Button>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-surface-200 bg-surface-100 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="h-20 w-20 rounded-2xl overflow-hidden border border-surface-300 bg-surface-200 flex items-center justify-center text-surface-500 text-xs">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="avatar preview" className="h-full w-full object-cover" />
+                ) : (
+                  'Нет фото'
+                )}
+              </div>
+
+              <div className="flex-1">
+                <label className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-surface-200 text-surface-800 hover:bg-surface-300 border border-surface-300 cursor-pointer transition-colors">
+                  <ImagePlus className="h-4 w-4" />
+                  {isAvatarLoading ? 'Загрузка...' : 'Загрузить аватар'}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => void handleAvatarUpload(e.target.files?.[0] ?? null)}
+                    disabled={isAvatarLoading}
+                  />
+                </label>
+                <p className="mt-2 text-xs text-surface-500">
+                  Поддержка PNG, JPG, WEBP, GIF до 5 MB.
+                </p>
+                {!isEdit && (
+                  <p className="mt-2 text-xs text-primary-600">
+                    Аватар можно добавить после первого сохранения карточки.
+                  </p>
+                )}
+              </div>
+            </div>
+            {avatarError && <p className="mt-3 text-sm text-red-400">{avatarError}</p>}
+          </div>
         </div>
 
         <div className="space-y-4">

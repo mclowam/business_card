@@ -17,9 +17,13 @@ class ApiClient {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const isFormData = options.body instanceof FormData
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...options.headers as Record<string, string>,
+      ...(options.headers as Record<string, string>),
+    }
+
+    if (!isFormData && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json'
     }
 
     if (this.token) {
@@ -32,11 +36,16 @@ class ApiClient {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Network error' }))
-      throw new Error(error.message ?? `HTTP ${response.status}`)
+      const body = await response.json().catch(() => ({}))
+      const msg = body.detail ?? body.message ?? `HTTP ${response.status}`
+      throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg))
     }
 
-    return response.json()
+    if (response.status === 204) {
+      return undefined as T
+    }
+
+    return response.json() as Promise<T>
   }
 
   get<T>(endpoint: string) {
@@ -45,6 +54,10 @@ class ApiClient {
 
   post<T>(endpoint: string, data: unknown) {
     return this.request<T>(endpoint, { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  postForm<T>(endpoint: string, data: FormData) {
+    return this.request<T>(endpoint, { method: 'POST', body: data })
   }
 
   put<T>(endpoint: string, data: unknown) {

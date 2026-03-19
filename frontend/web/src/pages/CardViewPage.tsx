@@ -118,25 +118,32 @@ export function CardViewPage() {
   }
 
   const initials = `${card.first_name[0] ?? ''}${card.last_name[0] ?? ''}`.toUpperCase()
+  const avatarSrc = card.avatar_url ? cardsService.getAvatarUrl(card.id) : null
 
   return (
     <div className="min-h-screen bg-surface-50 relative overflow-x-hidden">
-      {/* Ambient glow blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden -z-0">
         <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary-400 opacity-[0.06] blur-3xl animate-[glow_4s_ease-in-out_infinite]" />
         <div className="absolute top-1/3 -right-40 h-80 w-80 rounded-full bg-primary-500 opacity-[0.05] blur-3xl animate-[glow_5s_ease-in-out_1s_infinite]" />
         <div className="absolute bottom-20 left-1/3 h-64 w-64 rounded-full bg-primary-300 opacity-[0.04] blur-3xl animate-[glow_6s_ease-in-out_2s_infinite]" />
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
 
-        {/* ── HERO ── */}
-        <div className="page-enter glass rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+        <div className="page-enter glass rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden border border-primary-500/20 shadow-[0_24px_80px_rgba(10,11,14,0.45)]">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-200/5 via-transparent to-primary-400/5 pointer-events-none" />
+          <div className="absolute -top-14 -right-14 h-44 w-44 rounded-full bg-primary-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-400/10 blur-3xl pointer-events-none" />
 
           <div className="relative">
-            <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-2xl font-bold text-white shadow-lg shadow-primary-500/30 mb-6 animate-[float_4s_ease-in-out_infinite]">
-              {initials}
+            <div className="mx-auto mb-6 h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-primary-400 via-primary-500 to-primary-700 shadow-lg shadow-primary-500/40 animate-[float_4s_ease-in-out_infinite]">
+              <div className="h-full w-full rounded-full bg-surface-100 overflow-hidden flex items-center justify-center text-2xl font-bold text-surface-900">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={`${card.first_name} ${card.last_name}`} className="h-full w-full " />
+                ) : (
+                  initials
+                )}
+              </div>
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-surface-900 mb-3 tracking-tight">
               {card.first_name}{' '}

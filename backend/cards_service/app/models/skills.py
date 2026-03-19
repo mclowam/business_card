@@ -7,7 +7,7 @@ class Skills(Base):
     __tablename__ = 'skills'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(300))
+    name: Mapped[str] = mapped_column(String(500))
     level: Mapped[int] = mapped_column(Integer)
 
     card_id: Mapped[int] = mapped_column(ForeignKey('cards.id'))

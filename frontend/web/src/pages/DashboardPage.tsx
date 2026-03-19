@@ -99,8 +99,12 @@ export function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary-400/5 to-transparent pointer-events-none" />
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="flex items-center gap-5">
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary-500/30 flex-shrink-0">
-                  {card.first_name[0]}{card.last_name[0]}
+                <div className="h-14 w-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary-500/30 flex-shrink-0">
+                  {card.avatar_url ? (
+                    <img src={cardsService.getAvatarUrl(card.id)} alt={`${card.first_name} ${card.last_name}`} className="h-full w-full object-cover" />
+                  ) : (
+                    <>{card.first_name[0]}{card.last_name[0]}</>
+                  )}
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-surface-900">

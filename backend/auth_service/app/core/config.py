@@ -13,7 +13,7 @@ class Settings:
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_PORT: str = os.getenv("DB_PORT", "5432")
 
-    SECRET_KEY: str = "SECRET_KEY"
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"
     ACCESS_EXPIRE_MIN: int = 30
     REFRESH_EXPIRE_DAYS: int = 7

@@ -22,6 +22,21 @@ export const cardsService = {
     return cardsApi.patch<CardRead>('/api/card/me', data)
   },
 
+  async uploadMyAvatar(file: File): Promise<CardRead> {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    return cardsApi.postForm<CardRead>('/api/card/me/avatar', formData)
+  },
+
+  async deleteMyAvatar(): Promise<void> {
+    await cardsApi.delete('/api/card/me/avatar')
+  },
+
+  getAvatarUrl(cardId: number): string {
+    const baseUrl = import.meta.env.VITE_CARDS_API_URL ?? 'http://localhost:8001'
+    return `${baseUrl.replace(/\/+$/, '')}/api/card/${cardId}/avatar`
+  },
+
   async deleteMe(): Promise<void> {
     await cardsApi.delete('/api/card/me')
   },

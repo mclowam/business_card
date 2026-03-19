@@ -9,8 +9,8 @@ class Project(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    text: Mapped[str] = mapped_column(String(400))
-    description: Mapped[str] = mapped_column(String(1000))
+    text: Mapped[str] = mapped_column(String(700))
+    description: Mapped[str] = mapped_column(String(2000))
 
     card_id: Mapped[int] = mapped_column(ForeignKey("cards.id"))
 

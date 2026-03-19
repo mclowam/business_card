@@ -53,6 +53,7 @@ export interface CardRead {
   profession: string
   text: string
   about_user: string
+  avatar_url?: string | null
   skills: Skill[]
   experiences: Experience[]
   user_occupations: UserOccupation[]

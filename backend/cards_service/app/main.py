@@ -8,7 +8,7 @@ from app.routers.card import card_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     await ensure_bucket()
     yield
 

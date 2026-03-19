@@ -8,8 +8,8 @@ class Experience(Base):
     __tablename__ = 'experiences'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    text: Mapped[str] = mapped_column(String(300))
-    description: Mapped[str] = mapped_column(String(300))
+    text: Mapped[str] = mapped_column(String(500))
+    description: Mapped[str] = mapped_column(String(3000))
 
     card_id: Mapped[int] = mapped_column(ForeignKey('cards.id'))
 
