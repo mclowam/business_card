@@ -1,28 +1,43 @@
-import { api } from './api'
-import type { CardSite, CardSiteFormData } from '@/types'
+import { cardsApi } from './api'
+import type { CardCreate, CardRead, CardUpdate } from '@/types'
 
 export const cardsService = {
-  async getMySites(): Promise<CardSite[]> {
-    try {
-      return await api.get<CardSite[]>('/sites/me')
-    } catch {
-      return []
-    }
+  async create(data: CardCreate): Promise<CardRead> {
+    return cardsApi.post<CardRead>('/api/card/', data)
   },
 
-  async getBySlug(slug: string): Promise<CardSite> {
-    return api.get<CardSite>(`/sites/${slug}`)
+  async getById(cardId: number): Promise<CardRead> {
+    return cardsApi.get<CardRead>(`/api/card/${cardId}`)
   },
 
-  async create(data: CardSiteFormData): Promise<CardSite> {
-    return api.post<CardSite>('/sites', data)
+  async getByName(name: string): Promise<CardRead> {
+    return cardsApi.get<CardRead>(`/api/card/site/${encodeURIComponent(name)}`)
   },
 
-  async update(id: string, data: Partial<CardSiteFormData>): Promise<CardSite> {
-    return api.put<CardSite>(`/sites/${id}`, data)
+  async getMine(): Promise<CardRead> {
+    return cardsApi.get<CardRead>('/api/card/me')
   },
 
-  async delete(id: string): Promise<void> {
-    return api.delete(`/sites/${id}`)
+  async updateMe(data: CardUpdate): Promise<CardRead> {
+    return cardsApi.patch<CardRead>('/api/card/me', data)
+  },
+
+  async uploadMyAvatar(file: File): Promise<CardRead> {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    return cardsApi.postForm<CardRead>('/api/card/me/avatar', formData)
+  },
+
+  async deleteMyAvatar(): Promise<void> {
+    await cardsApi.delete('/api/card/me/avatar')
+  },
+
+  getAvatarUrl(cardId: number): string {
+    const baseUrl = import.meta.env.VITE_CARDS_API_URL ?? 'http://localhost:8001'
+    return `${baseUrl.replace(/\/+$/, '')}/api/card/${cardId}/avatar`
+  },
+
+  async deleteMe(): Promise<void> {
+    await cardsApi.delete('/api/card/me')
   },
 }

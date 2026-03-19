@@ -8,7 +8,6 @@ export function RegisterPage() {
   const navigate = useNavigate()
   const { register } = useAuth()
 
-  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -20,7 +19,7 @@ export function RegisterPage() {
     setIsLoading(true)
 
     try {
-      await register(username, email, password)
+      await register(email, password)
       navigate('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка при регистрации')
@@ -48,15 +47,6 @@ export function RegisterPage() {
               {error}
             </div>
           )}
-
-          <Input
-            label="Имя пользователя"
-            type="text"
-            placeholder="maxim"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
 
           <Input
             label="Email"

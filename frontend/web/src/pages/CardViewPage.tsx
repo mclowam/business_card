@@ -1,170 +1,248 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import type { CardSite } from '@/types'
+import { Briefcase, Code2, FolderGit2, User, ArrowLeft } from 'lucide-react'
+import type { CardRead } from '@/types'
 import { cardsService } from '@/services/cards'
-import { SectionRenderer } from '@/components/sections/SectionRenderer'
 
-const DEMO_SITE: CardSite = {
-  id: 'demo',
-  userId: 'demo',
-  slug: 'demo',
-  siteName: 'Максим Иванов',
-  metaDescription: 'Frontend-разработчик из Москвы',
-  socialLinks: [
-    { platform: 'GitHub', url: 'https://github.com' },
-    { platform: 'Telegram', url: 'https://t.me' },
-    { platform: 'LinkedIn', url: 'https://linkedin.com' },
-  ],
-  theme: {
-    primaryColor: '#4c6ef5',
-    backgroundColor: '#ffffff',
-    textColor: '#212529',
-    accentColor: '#7c3aed',
-    fontFamily: 'Inter',
-  },
-  sections: [
-    {
-      type: 'hero',
-      heading: 'Максим Иванов',
-      subheading: 'Frontend Developer',
-      description: 'Создаю современные веб-приложения на React и TypeScript. Превращаю идеи в рабочий продукт.',
-      ctaText: 'Связаться со мной',
-      ctaUrl: '#contact',
-    },
-    {
-      type: 'about',
-      title: 'Обо мне',
-      text: 'Более 5 лет опыта в разработке веб-приложений. Специализируюсь на React, TypeScript и современном фронтенде. Люблю чистый код, красивые интерфейсы и продуманный UX.\n\nРаботал с проектами от стартапов до крупных корпоративных решений.',
-    },
-    {
-      type: 'services',
-      title: 'Что я делаю',
-      items: [
-        { title: 'Веб-разработка', description: 'Создание SPA и PWA на React/Next.js с современным стеком технологий.', icon: '💻' },
-        { title: 'UI/UX Дизайн', description: 'Проектирование удобных и красивых интерфейсов. Figma, прототипирование.', icon: '🎨' },
-        { title: 'Консультации', description: 'Аудит кода, архитектурные решения, менторство для junior-разработчиков.', icon: '📋' },
-      ],
-    },
-    {
-      type: 'skills',
-      title: 'Навыки',
-      items: [
-        { name: 'React / Next.js', level: 95 },
-        { name: 'TypeScript', level: 90 },
-        { name: 'CSS / Tailwind', level: 85 },
-        { name: 'Node.js', level: 75 },
-        { name: 'Figma', level: 70 },
-      ],
-    },
-    {
-      type: 'experience',
-      title: 'Опыт работы',
-      items: [
-        { company: 'TechCorp', role: 'Senior Frontend Developer', period: '2023 — настоящее время', description: 'Разработка и архитектура frontend-части SaaS-платформы. Миграция с Vue на React.' },
-        { company: 'StartupX', role: 'Frontend Developer', period: '2021 — 2023', description: 'Создание MVP с нуля. React, TypeScript, GraphQL. Рост до 50k+ пользователей.' },
-        { company: 'WebStudio', role: 'Junior Developer', period: '2019 — 2021', description: 'Вёрстка и разработка лендингов, корпоративных сайтов. HTML, CSS, JavaScript.' },
-      ],
-    },
-    {
-      type: 'portfolio',
-      title: 'Проекты',
-      items: [
-        { title: 'TaskFlow', description: 'Канбан-доска для управления проектами с real-time синхронизацией.', linkUrl: '#' },
-        { title: 'ShopEngine', description: 'Платформа для создания интернет-магазинов с конструктором страниц.', linkUrl: '#' },
-        { title: 'DevBlog', description: 'Персональный блог на MDX с автоматической генерацией OG-картинок.', linkUrl: '#' },
-      ],
-    },
-    {
-      type: 'contact',
-      title: 'Контакты',
-      email: 'maxim@example.com',
-      phone: '+7 (999) 123-45-67',
-      location: 'Москва, Россия',
-      showForm: true,
-    },
-  ],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return { ref, visible }
+}
+
+function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const { ref, visible } = useInView()
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
+    >
+      {children}
+    </div>
+  )
+}
+
+function SkillBar({ name, level, index }: { name: string; level: number; index: number }) {
+  const { ref, visible } = useInView()
+  const pct = Math.min(Math.max(level, 0), 100)
+  return (
+    <div ref={ref} style={{ transitionDelay: `${index * 60}ms` }}
+      className={`transition-all duration-500 ${visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+    >
+      <div className="flex justify-between mb-1.5 text-sm">
+        <span className="text-surface-800 font-medium">{name}</span>
+        <span className="text-primary-600 font-mono">{pct}%</span>
+      </div>
+      <div className="progress-bar">
+        <div
+          className="progress-bar-fill"
+          style={{ '--progress-width': `${pct}%`, animationDelay: `${0.3 + index * 0.06}s` } as React.CSSProperties}
+        />
+      </div>
+    </div>
+  )
+}
+
+function CardItem({ title, description, index }: { title: string; description: string; index: number }) {
+  const { ref, visible } = useInView()
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${index * 80}ms` }}
+      className={`card-hover glass rounded-2xl p-5 transition-all duration-500 ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+    >
+      <div className="font-semibold text-surface-900 mb-1">{title}</div>
+      <div className="text-sm text-surface-600 leading-relaxed whitespace-pre-wrap">{description}</div>
+    </div>
+  )
 }
 
 export function CardViewPage() {
   const { slug } = useParams<{ slug: string }>()
-  const [site, setSite] = useState<CardSite | null>(null)
+  const [card, setCard] = useState<CardRead | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!slug) return
-
-    if (slug === 'demo') {
-      setSite(DEMO_SITE)
-      setIsLoading(false)
-      return
-    }
-
     cardsService
-      .getBySlug(slug)
-      .then(setSite)
-      .catch(() => setError('Сайт не найден'))
+      .getByName(slug)
+      .then(setCard)
+      .catch(() => setError('not found'))
       .finally(() => setIsLoading(false))
   }, [slug])
 
   useEffect(() => {
-    if (site) {
-      document.title = site.siteName
-    }
+    if (card) document.title = `${card.first_name} ${card.last_name}`
     return () => { document.title = 'CardCraft' }
-  }, [site])
+  }, [card])
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-primary-200 border-t-primary-600 rounded-full" />
+      <div className="flex items-center justify-center min-h-screen bg-surface-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 rounded-full border-4 border-primary-200 opacity-20" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-primary-500 animate-spin" />
+          </div>
+          <p className="text-surface-500 text-sm animate-pulse">Загрузка карточки…</p>
+        </div>
       </div>
     )
   }
 
-  if (error || !site) {
+  if (error || !card) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
-        <h1 className="text-3xl font-bold text-surface-900 mb-3">Сайт не найден</h1>
-        <p className="text-surface-500 mb-6">
-          Пользователь «{slug}» не создал сайт-визитку или она была удалена.
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface-50 text-center px-4 page-enter">
+        <div className="text-6xl mb-6">🔍</div>
+        <h1 className="text-3xl font-bold text-surface-900 mb-3">Карточка не найдена</h1>
+        <p className="text-surface-500 mb-8 max-w-sm">
+          Пользователь <span className="text-primary-600 font-medium">«{slug}»</span> ещё не создал свою карточку.
         </p>
-        <Link
-          to="/"
-          className="text-primary-600 hover:text-primary-700 font-medium"
-        >
-          Вернуться на главную
+        <Link to="/" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-500 font-medium transition-colors">
+          <ArrowLeft className="h-4 w-4" />
+          На главную
         </Link>
       </div>
     )
   }
+
+  const initials = `${card.first_name[0] ?? ''}${card.last_name[0] ?? ''}`.toUpperCase()
+  const avatarSrc = card.avatar_url ? cardsService.getAvatarUrl(card.id) : null
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        backgroundColor: site.theme.backgroundColor,
-        fontFamily: site.theme.fontFamily,
-        color: site.theme.textColor,
-      }}
-    >
-      {site.sections.map((section, i) => (
-        <SectionRenderer
-          key={`${section.type}-${i}`}
-          section={section}
-          theme={site.theme}
-          socialLinks={site.socialLinks}
-        />
-      ))}
+    <div className="min-h-screen bg-surface-50 relative overflow-x-hidden">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden -z-0">
+        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary-400 opacity-[0.06] blur-3xl animate-[glow_4s_ease-in-out_infinite]" />
+        <div className="absolute top-1/3 -right-40 h-80 w-80 rounded-full bg-primary-500 opacity-[0.05] blur-3xl animate-[glow_5s_ease-in-out_1s_infinite]" />
+        <div className="absolute bottom-20 left-1/3 h-64 w-64 rounded-full bg-primary-300 opacity-[0.04] blur-3xl animate-[glow_6s_ease-in-out_2s_infinite]" />
+      </div>
 
-      <footer className="py-6 text-center text-sm" style={{ color: `${site.theme.textColor}66` }}>
-        Сделано с помощью{' '}
-        <Link to="/" className="font-medium hover:opacity-80" style={{ color: site.theme.primaryColor }}>
-          CardCraft
-        </Link>
-      </footer>
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+
+        <div className="page-enter glass rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden border border-primary-500/20 shadow-[0_24px_80px_rgba(10,11,14,0.45)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-200/5 via-transparent to-primary-400/5 pointer-events-none" />
+          <div className="absolute -top-14 -right-14 h-44 w-44 rounded-full bg-primary-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-400/10 blur-3xl pointer-events-none" />
+
+          <div className="relative">
+            <div className="mx-auto mb-6 h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-primary-400 via-primary-500 to-primary-700 shadow-lg shadow-primary-500/40 animate-[float_4s_ease-in-out_infinite]">
+              <div className="h-full w-full rounded-full bg-surface-100 overflow-hidden flex items-center justify-center text-2xl font-bold text-surface-900">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={`${card.first_name} ${card.last_name}`} className="h-full w-full " />
+                ) : (
+                  initials
+                )}
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-bold text-surface-900 mb-3 tracking-tight">
+              {card.first_name}{' '}
+              <span className="text-shimmer">{card.last_name}</span>
+            </h1>
+            <p className="text-lg text-primary-600 font-medium mb-6">{card.profession}</p>
+            <hr className="dot-divider" />
+            <p className="text-surface-700 leading-relaxed text-base mt-6 whitespace-pre-wrap max-w-xl mx-auto">
+              {card.text}
+            </p>
+            <div className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-300/50 text-surface-600 text-xs font-mono">
+              /card/{card.name}
+            </div>
+          </div>
+        </div>
+
+        {/* ── ABOUT ── */}
+        <Section>
+          <div className="glass rounded-2xl p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-9 w-9 rounded-xl bg-primary-200/20 flex items-center justify-center flex-shrink-0">
+                <User className="h-4 w-4 text-primary-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-surface-900">О себе</h2>
+            </div>
+            <p className="text-surface-700 leading-relaxed whitespace-pre-wrap">{card.about_user}</p>
+          </div>
+        </Section>
+
+        {/* ── SKILLS ── */}
+        {card.skills.length > 0 && (
+          <Section>
+            <div className="glass rounded-2xl p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-9 w-9 rounded-xl bg-primary-200/20 flex items-center justify-center flex-shrink-0">
+                  <Code2 className="h-4 w-4 text-primary-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-surface-900">Навыки</h2>
+              </div>
+              <div className="space-y-4">
+                {card.skills.map((s, i) => (
+                  <SkillBar key={`${s.name}-${i}`} name={s.name} level={s.level} index={i} />
+                ))}
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* ── EXPERIENCE ── */}
+        {card.experiences.length > 0 && (
+          <Section>
+            <div className="glass rounded-2xl p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-9 w-9 rounded-xl bg-primary-200/20 flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="h-4 w-4 text-primary-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-surface-900">Опыт</h2>
+              </div>
+              <div className="relative pl-5 border-l border-primary-400/20 space-y-6">
+                {card.experiences.map((e, i) => (
+                  <div
+                    key={`${e.text}-${i}`}
+                    className="relative"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <div className="absolute -left-[1.375rem] top-1.5 h-3 w-3 rounded-full bg-primary-500 ring-4 ring-surface-50" />
+                    <div className="font-semibold text-surface-900 mb-1">{e.text}</div>
+                    <div className="text-sm text-surface-600 leading-relaxed whitespace-pre-wrap">{e.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* ── PROJECTS ── */}
+        {card.projects.length > 0 && (
+          <Section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-9 w-9 rounded-xl bg-primary-200/20 flex items-center justify-center flex-shrink-0">
+                <FolderGit2 className="h-4 w-4 text-primary-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-surface-900">Проекты</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {card.projects.map((p, i) => (
+                <CardItem key={`${p.text}-${i}`} title={p.text} description={p.description} index={i} />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        <footer className="text-center py-4 text-sm text-surface-500 animate-[fade-in_1s_ease_0.5s_both]">
+          Сделано с помощью{' '}
+          <Link to="/" className="text-primary-600 hover:text-primary-500 font-medium transition-colors">
+            CardCraft
+          </Link>
+        </footer>
+      </div>
     </div>
   )
 }

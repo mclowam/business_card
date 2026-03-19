@@ -1,24 +1,23 @@
-import { api } from './api'
-import type { AuthResponse, LoginPayload, RegisterPayload, User } from '@/types'
+import { authApi, setApiToken } from './api'
+import type { LoginPayload, RegisterPayload, TokenPair, UserPayload } from '@/types'
 
 export const authService = {
-  async login(payload: LoginPayload): Promise<AuthResponse> {
-    const data = await api.post<AuthResponse>('/auth/login', payload)
-    api.setToken(data.token)
+  async login(payload: LoginPayload): Promise<TokenPair> {
+    const data = await authApi.post<TokenPair>('/auth/login', payload)
+    setApiToken(data.access_token)
     return data
   },
 
-  async register(payload: RegisterPayload): Promise<AuthResponse> {
-    const data = await api.post<AuthResponse>('/auth/register', payload)
-    api.setToken(data.token)
-    return data
+  async register(payload: RegisterPayload): Promise<void> {
+    await authApi.post('/auth/register', payload)
+    await this.login({ email: payload.email, password: payload.password })
   },
 
-  async me(): Promise<User> {
-    return api.get<User>('/auth/me')
+  async me(): Promise<UserPayload> {
+    return authApi.get<UserPayload>('/auth/me')
   },
 
   logout() {
-    api.setToken(null)
+    setApiToken(null)
   },
 }

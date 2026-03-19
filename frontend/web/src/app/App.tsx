@@ -15,16 +15,13 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public card page — without header/footer for clean look */}
           <Route path="/card/:slug" element={<CardViewPage />} />
 
-          {/* Main layout with header/footer */}
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/dashboard/new" element={<CardEditorPage />} />
