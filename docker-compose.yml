@@ -62,7 +62,7 @@ services:
     build:
       context: ./backend/auth_service
       dockerfile: Dockerfile
-    container_name: auth_app
+    container_name: business_auth
     environment:
       DB_HOST: postgres-auth
       DB_PORT: 5432
@@ -92,10 +92,16 @@ services:
       DB_USER: admin
       DB_PASSWORD: admin
       PYTHONPATH: /app
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password123
+      MINIO_BUCKET: avatars
     networks:
       - backend-network
     depends_on:
       postgres-cards:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     expose:
       - "8000"

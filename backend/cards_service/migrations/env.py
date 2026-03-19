@@ -8,12 +8,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from dotenv import load_dotenv
 
-from db.base import Base
-from models.card import Card
-from models.skills import Skills
-from models.experience import Experience
-from models.occupation import UserOccupation
-from models.projects import Project
+from app.db.base import Base
+from app.models.card import Card
+from app.models.skills import Skills
+from app.models.experience import Experience
+from app.models.occupation import UserOccupation
+from app.models.projects import Project
 
 
 
